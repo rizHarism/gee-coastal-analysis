@@ -6,8 +6,12 @@
     },
     "rewrites": [
         {
+            "source": "/api/get_cvi",
+            "destination": "/api/index.py"
+        },
+        {
             "source": "/api/(.*)",
-            "destination": "/api/$1"
+            "destination": "/api/index.py"
         },
         {
             "source": "/cesium",
