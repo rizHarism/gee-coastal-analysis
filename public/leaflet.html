@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pekalongan CVI 2D - Leaflet WebGIS</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(71, 85, 105, 0.8);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 h-screen w-screen overflow-hidden relative">
+
+    <!-- Leaflet Map Container -->
+    <div id="map" class="w-full h-full z-0"></div>
+
+    <!-- Floating Top-Left Control Panel -->
+    <div
+        class="absolute top-4 left-4 z-[1000] w-84 sm:w-96 max-h-[calc(100vh-2rem)] flex flex-col bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-700/60 shadow-2xl shadow-black/50 text-slate-200 transition-all">
+
+        <!-- Header -->
+        <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
+                <div>
+                    <h2 class="text-sm font-bold tracking-wide text-white uppercase">Pekalongan CVI 2D</h2>
+                    <p class="text-[11px] text-slate-400">Coastal Vulnerability WebGIS</p>
+                </div>
+            </div>
+            <!-- Navigation links -->
+            <div class="flex items-center gap-1.5">
+                <a href="/" title="Kembali ke Beranda"
+                    class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    Home
+                </a>
+                <a href="/cesium" title="Beralih ke Visualisasi 3D"
+                    class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-sky-600 hover:bg-sky-500 text-white transition flex items-center gap-1 shadow-sm shadow-sky-600/30">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
+                    </svg>
+                    Mode 3D
+                </a>
+            </div>
+        </div>
+
+        <!-- Panel Body (Scrollable if needed) -->
+        <div class="p-4 space-y-4 overflow-y-auto custom-scrollbar text-xs">
+
+            <!-- Date Filter & Settings -->
+            <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800/80 space-y-2.5">
+                <div
+                    class="flex items-center justify-between text-slate-300 font-semibold text-[11px] uppercase tracking-wider">
+                    <span>Rentang Data Sentinel-2</span>
+                    <span id="fetchStatusBadge" class="text-[10px] text-emerald-400 font-normal">Siap</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[10px] text-slate-400 mb-1">Mulai</label>
+                        <input type="date" id="startDate" value="2025-01-01"
+                            class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-sky-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-400 mb-1">Selesai</label>
+                        <input type="date" id="endDate" value="2026-03-01"
+                            class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-sky-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] text-slate-400 mb-1">Palet CVI</label>
+                    <select id="paletteChoice"
+                        class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-sky-500">
+                        <option value="#31a354,#fec44f,#de2d26">Mitigasi Bencana (Hijau - Kuning - Merah)</option>
+                        <option value="#045a8d,#74a9cf,#f0f7ff">Oseanografi (Gradasi Biru)</option>
+                    </select>
+                </div>
+
+                <button id="updateMapBtn"
+                    class="w-full mt-1 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-medium py-2 rounded-lg transition flex items-center justify-center gap-1.5 shadow-md shadow-sky-900/30">
+                    <svg id="updateSpinner" class="hidden w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                        </circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                    </svg>
+                    <span id="updateBtnText">Perbarui Data Layer</span>
+                </button>
+            </div>
+
+            <!-- Master Opacity Slider -->
+            <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
+                <div class="flex justify-between items-center mb-1.5">
+                    <span class="text-slate-300 font-semibold text-[11px] uppercase tracking-wider">Transparansi Global
+                        (Master)</span>
+                    <span id="globalOpacityVal" class="text-sky-400 font-mono text-[11px]">80%</span>
+                </div>
+                <input type="range" id="globalOpacity" min="0" max="1" step="0.05" value="0.8"
+                    class="w-full accent-sky-500 cursor-pointer">
+            </div>
+
+            <!-- Individual Layer Toggles -->
+            <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800/80 space-y-3">
+                <div class="text-slate-300 font-semibold text-[11px] uppercase tracking-wider">Kontrol Layer Tematik
+                </div>
+
+                <!-- CVI -->
+                <div class="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="checkCvi" checked
+                                class="w-4 h-4 rounded text-sky-500 accent-sky-500 bg-slate-800 border-slate-600">
+                            <span class="font-medium text-slate-100">Indeks CVI Utama</span>
+                        </label>
+                        <span id="cviOpacityVal" class="text-[10px] text-slate-400 font-mono">80%</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] text-slate-500 w-12">Opacity:</span>
+                        <input type="range" id="opacityCvi" min="0" max="1" step="0.05" value="0.8"
+                            class="w-full accent-sky-500 cursor-pointer">
+                    </div>
+                </div>
+
+                <!-- Slope -->
+                <div class="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="checkSlope"
+                                class="w-4 h-4 rounded text-sky-500 accent-sky-500 bg-slate-800 border-slate-600">
+                            <span class="font-medium text-slate-100">Kemiringan Lereng (Slope)</span>
+                        </label>
+                        <span id="slopeOpacityVal" class="text-[10px] text-slate-400 font-mono">80%</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] text-slate-500 w-12">Opacity:</span>
+                        <input type="range" id="opacitySlope" min="0" max="1" step="0.05" value="0.8"
+                            class="w-full accent-sky-500 cursor-pointer">
+                    </div>
+                </div>
+
+                <!-- NDVI -->
+                <div class="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="checkNdvi"
+                                class="w-4 h-4 rounded text-sky-500 accent-sky-500 bg-slate-800 border-slate-600">
+                            <span class="font-medium text-slate-100">Kerapatan Vegetasi (NDVI)</span>
+                        </label>
+                        <span id="ndviOpacityVal" class="text-[10px] text-slate-400 font-mono">80%</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] text-slate-500 w-12">Opacity:</span>
+                        <input type="range" id="opacityNdvi" min="0" max="1" step="0.05" value="0.8"
+                            class="w-full accent-sky-500 cursor-pointer">
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Floating Bottom-Right Legend Panel -->
+    <div id="legendPanel"
+        class="absolute bottom-4 right-4 z-[1000] w-72 max-w-[90vw] bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-700/60 shadow-2xl p-4 text-slate-200">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-800 mb-3">
+            <span class="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-sky-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                        d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
+                </svg>
+                Legenda Tematik
+            </span>
+            <button id="toggleLegendBtn" class="text-slate-400 hover:text-white text-xs">Sembunyikan</button>
+        </div>
+
+        <div id="legendContent" class="space-y-3.5 text-xs">
+            <!-- CVI Legend -->
+            <div id="legendCviBlock">
+                <p class="text-[11px] font-semibold text-slate-300 mb-1.5">Indeks Kerentanan Pesisir (CVI)</p>
+                <div class="h-3 rounded-full overflow-hidden flex shadow-inner mb-1" id="cviGradientBar">
+                    <div class="flex-1 bg-[#31a354]"></div>
+                    <div class="flex-1 bg-[#fec44f]"></div>
+                    <div class="flex-1 bg-[#de2d26]"></div>
+                </div>
+                <div class="flex justify-between text-[10px] text-slate-400 px-0.5">
+                    <span>Rendah (Aman)</span>
+                    <span>Sedang</span>
+                    <span class="text-rose-400 font-medium">Sangat Tinggi</span>
+                </div>
+            </div>
+
+            <!-- Slope Legend -->
+            <div id="legendSlopeBlock" class="pt-2 border-t border-slate-800/80">
+                <p class="text-[11px] font-semibold text-slate-300 mb-1">Kemiringan Lereng (DEM GLO30)</p>
+                <div class="space-y-1 text-[10px] text-slate-300">
+                    <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-red-600 inline-block"></span> 0
+                        - 1% (Sangat Datar / Sangat Rentan)</div>
+                    <div class="flex items-center gap-2"><span
+                            class="w-3 h-3 rounded bg-yellow-400 inline-block"></span> 1 - 3% (Landai / Sedang)</div>
+                    <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-green-600 inline-block"></span>
+                        > 3% (Curam / Relatif Aman)</div>
+                </div>
+            </div>
+
+            <!-- NDVI Legend -->
+            <div id="legendNdviBlock" class="pt-2 border-t border-slate-800/80">
+                <p class="text-[11px] font-semibold text-slate-300 mb-1">Kerapatan Vegetasi (NDVI Sentinel-2)</p>
+                <div
+                    class="h-2.5 rounded-full overflow-hidden flex shadow-inner mb-1 bg-gradient-to-r from-blue-600 via-slate-100 to-green-600">
+                </div>
+                <div class="flex justify-between text-[10px] text-slate-400 px-0.5">
+                    <span>Air / Tanah (0.0)</span>
+                    <span>Jarang</span>
+                    <span class="text-emerald-400 font-medium">Rapat (0.8)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script>
+        // Inisialisasi peta Leaflet terpusat di Pekalongan
+        const map = L.map('map', {
+            zoomControl: false // Kita pindah zoom control ke kanan atas agar tidak tumpang tindih dengan kontrol panel kiri
+        }).setView([-6.89, 109.68], 12);
+
+        L.control.zoom({ position: 'topright' }).addTo(map);
+
+        // Basemap Satelit CartoDB / OSM Dark/Light
+        const basemap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+            maxZoom: 19
+        }).addTo(map);
+
+        // Objek state layer
+        const tileUrls = {};
+        const activeLayers = {
+            cvi: null,
+            slope: null,
+            ndvi: null
+        };
+
+        const alphas = {
+            cvi: 0.8,
+            slope: 0.8,
+            ndvi: 0.8
+        };
+
+        function setBadge(text, colorClass) {
+            const badge = document.getElementById('fetchStatusBadge');
+            badge.innerText = text;
+            badge.className = `text-[10px] font-normal ${colorClass}`;
+        }
+
+        // Fetch Tile URL dari API Vercel
+        async function fetchGEETiles() {
+            const start = document.getElementById('startDate').value;
+            const end = document.getElementById('endDate').value;
+            const palette = document.getElementById('paletteChoice').value;
+
+            const spinner = document.getElementById('updateSpinner');
+            const btnText = document.getElementById('updateBtnText');
+            spinner.classList.remove('hidden');
+            btnText.innerText = "Memproses GEE...";
+            setBadge("Mengunduh Tile...", "text-amber-400 animate-pulse");
+
+            try {
+                const response = await fetch(`/api/get_cvi?start=${start}&end=${end}&palette=${encodeURIComponent(palette)}`);
+                if (!response.ok) throw new Error("Gagal mengambil data dari backend");
+                const data = await response.json();
+
+                tileUrls.cvi = data.cvi;
+                tileUrls.slope = data.slope;
+                tileUrls.ndvi = data.ndvi;
+
+                // Update layer jika sedang aktif
+                ['cvi', 'slope', 'ndvi'].forEach(key => {
+                    const check = document.getElementById('check' + key.charAt(0).toUpperCase() + key.slice(1));
+                    if (activeLayers[key]) {
+                        map.removeLayer(activeLayers[key]);
+                        activeLayers[key] = null;
+                    }
+                    if (check && check.checked && tileUrls[key]) {
+                        activeLayers[key] = L.tileLayer(tileUrls[key], { opacity: alphas[key] }).addTo(map);
+                    }
+                });
+
+                setBadge("Aktif", "text-emerald-400");
+            } catch (err) {
+                console.error(err);
+                setBadge("Gagal", "text-rose-400");
+                alert("Gagal memuat data dari Earth Engine. Silakan periksa kredensial atau parameter.");
+            } finally {
+                spinner.classList.add('hidden');
+                btnText.innerText = "Perbarui Data Layer";
+            }
+        }
+
+        // Setup Checkbox Toggle
+        function setupToggle(key, checkId) {
+            const check = document.getElementById(checkId);
+            check.addEventListener('change', () => {
+                if (check.checked) {
+                    if (tileUrls[key] && !activeLayers[key]) {
+                        activeLayers[key] = L.tileLayer(tileUrls[key], { opacity: alphas[key] }).addTo(map);
+                    }
+                } else {
+                    if (activeLayers[key]) {
+                        map.removeLayer(activeLayers[key]);
+                        activeLayers[key] = null;
+                    }
+                }
+            });
+        }
+
+        setupToggle('cvi', 'checkCvi');
+        setupToggle('slope', 'checkSlope');
+        setupToggle('ndvi', 'checkNdvi');
+
+        // Setup Opacity Sliders
+        function setupOpacity(key, sliderId, labelId) {
+            const slider = document.getElementById(sliderId);
+            const label = document.getElementById(labelId);
+            slider.addEventListener('input', (e) => {
+                const val = parseFloat(e.target.value);
+                alphas[key] = val;
+                label.innerText = `${Math.round(val * 100)}%`;
+                if (activeLayers[key]) {
+                    activeLayers[key].setOpacity(val);
+                }
+            });
+        }
+
+        setupOpacity('cvi', 'opacityCvi', 'cviOpacityVal');
+        setupOpacity('slope', 'opacitySlope', 'slopeOpacityVal');
+        setupOpacity('ndvi', 'opacityNdvi', 'ndviOpacityVal');
+
+        // Master Opacity
+        const globalSlider = document.getElementById('globalOpacity');
+        const globalVal = document.getElementById('globalOpacityVal');
+        globalSlider.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            globalVal.innerText = `${Math.round(val * 100)}%`;
+
+            ['cvi', 'slope', 'ndvi'].forEach(key => {
+                alphas[key] = val;
+                const capitalized = key.charAt(0).toUpperCase() + key.slice(1);
+                document.getElementById('opacity' + capitalized).value = val;
+                document.getElementById(key + 'OpacityVal').innerText = `${Math.round(val * 100)}%`;
+                if (activeLayers[key]) {
+                    activeLayers[key].setOpacity(val);
+                }
+            });
+        });
+
+        // Trigger Tombol Update
+        document.getElementById('updateMapBtn').addEventListener('click', fetchGEETiles);
+
+        // Toggle Legenda
+        const toggleLegendBtn = document.getElementById('toggleLegendBtn');
+        const legendContent = document.getElementById('legendContent');
+        let legendVisible = true;
+        toggleLegendBtn.addEventListener('click', () => {
+            legendVisible = !legendVisible;
+            legendContent.classList.toggle('hidden', !legendVisible);
+            toggleLegendBtn.innerText = legendVisible ? 'Sembunyikan' : 'Buka';
+        });
+
+        // Inisialisasi awal
+        fetchGEETiles();
+    </script>
+</body>
+
+</html>
