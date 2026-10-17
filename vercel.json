@@ -1,16 +1,36 @@
 {
     "rewrites": [
         {
+            "source": "/coastal-project/api/(.*)",
+            "destination": "/api/index.py"
+        },
+        {
             "source": "/api/(.*)",
             "destination": "/api/index.py"
+        },
+        {
+            "source": "/coastal-project/cesium",
+            "destination": "/cesium.html"
         },
         {
             "source": "/cesium",
             "destination": "/cesium.html"
         },
         {
+            "source": "/coastal-project/leaflet",
+            "destination": "/leaflet.html"
+        },
+        {
             "source": "/leaflet",
             "destination": "/leaflet.html"
+        },
+        {
+            "source": "/coastal-project",
+            "destination": "/index.html"
+        },
+        {
+            "source": "/coastal-project/(.*)",
+            "destination": "/$1"
         }
     ]
 }
