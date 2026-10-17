@@ -1,30 +1,16 @@
 {
-    "functions": {
-        "api/*.py": {
-            "maxDuration": 15,
-            "includeFiles": "public/**"
-        }
-    },
     "rewrites": [
-        {
-            "source": "/api/get_cvi",
-            "destination": "/api/index.py"
-        },
         {
             "source": "/api/(.*)",
             "destination": "/api/index.py"
         },
         {
             "source": "/cesium",
-            "destination": "/public/cesium.html"
+            "destination": "/cesium.html"
         },
         {
             "source": "/leaflet",
-            "destination": "/public/leaflet.html"
-        },
-        {
-            "source": "/(.*)",
-            "destination": "/public/$1"
+            "destination": "/leaflet.html"
         }
     ]
 }
