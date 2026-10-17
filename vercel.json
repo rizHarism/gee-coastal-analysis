@@ -1,11 +1,13 @@
 {
+    "cleanUrls": false,
+    "trailingSlash": false,
     "rewrites": [
         {
-            "source": "/coastal-project/api/(.*)",
+            "source": "/coastal-project/api/:path*",
             "destination": "/api/index.py"
         },
         {
-            "source": "/api/(.*)",
+            "source": "/api/:path*",
             "destination": "/api/index.py"
         },
         {
@@ -27,10 +29,6 @@
         {
             "source": "/coastal-project",
             "destination": "/index.html"
-        },
-        {
-            "source": "/coastal-project/(.*)",
-            "destination": "/$1"
         }
     ]
 }
