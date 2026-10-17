@@ -92,9 +92,9 @@ class handler(BaseHTTPRequestHandler):
 
             # 3. NDVI (Hanya Vegetasi > 0.2, selain vegetasi dibuat transparan)
             ndvi = s2.normalizedDifference(['B8', 'B4'])
-            ndvi_masked = ndvi.updateMask(ndvi.gt(0.2)).clip(roi)
+            ndvi_masked = ndvi.updateMask(ndvi.gt(0.3)).clip(roi)
             url_ndvi = ndvi_masked.getMapId({
-                'min': 0.2,
+                'min': 0.3,
                 'max': 0.8,
                 'palette': ['#d9f0a3', '#78c679', '#238443', '#004529']
             })['tile_fetcher'].url_format
