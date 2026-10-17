@@ -86,14 +86,16 @@
     <div class="absolute top-4 left-1/2 -translate-x-1/2 z-[999] pointer-events-none flex items-center gap-3">
         <div
             class="px-3 py-1 rounded-full bg-slate-900/90 border border-sky-500/50 backdrop-blur-md shadow-lg flex items-center gap-1.5 text-xs font-semibold text-sky-400">
-            <span>◀ Sisi Kiri:</span>
+            <span>◀ </span>
             <span id="labelYear1Badge" class="text-white font-bold">2018</span>
         </div>
+        <span></span>
+        <span></span>
+        <span></span>
         <div
             class="px-3 py-1 rounded-full bg-slate-900/90 border border-indigo-500/50 backdrop-blur-md shadow-lg flex items-center gap-1.5 text-xs font-semibold text-indigo-400">
-            <span>Sisi Kanan:</span>
             <span id="labelYear2Badge" class="text-white font-bold">2026</span>
-            <span>▶</span>
+            <span> ▶</span>
         </div>
     </div>
 
@@ -155,14 +157,14 @@
                         <label class="block text-[10px] text-sky-400 font-medium mb-1">Tahun 1 (Kiri)</label>
                         <select id="selectYear1"
                             class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-sky-500">
-                            <!-- Populated dynamically 2016-2026 -->
+                            <!-- Populated dynamically 2018-2026 -->
                         </select>
                     </div>
                     <div>
                         <label class="block text-[10px] text-indigo-400 font-medium mb-1">Tahun 2 (Kanan)</label>
                         <select id="selectYear2"
                             class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
-                            <!-- Populated dynamically 2016-2026 -->
+                            <!-- Populated dynamically 2018-2026 -->
                         </select>
                     </div>
                 </div>
@@ -306,7 +308,7 @@
         // Inisialisasi peta Leaflet
         const map = L.map('map', {
             zoomControl: false
-        }).setView([-6.89, 109.68], 12);
+        }).setView([-6.873866576696482, 109.64479328781312], 13);
 
         L.control.zoom({ position: 'topright' }).addTo(map);
 
@@ -347,10 +349,10 @@
             badge.className = `text-[10px] font-normal ${colorClass}`;
         }
 
-        // Generate Opsi Dropdown Tahun (2016 s/d 2026)
+        // Generate Opsi Dropdown Tahun (2018 s/d 2026)
         function initYearDropdowns() {
             const currentYear = new Date().getFullYear();
-            const startYear = 2016;
+            const startYear = 2018;
             const sel1 = document.getElementById('selectYear1');
             const sel2 = document.getElementById('selectYear2');
             sel1.innerHTML = '';
@@ -501,7 +503,7 @@
             const spinner = document.getElementById('updateSpinner');
             const btnText = document.getElementById('updateBtnText');
             spinner.classList.remove('hidden');
-            btnText.innerText = "Memproses GEE...";
+            btnText.innerText = "Memproses Data...";
             setBadge("Mengunduh Tile...", "text-amber-400 animate-pulse");
 
             try {
