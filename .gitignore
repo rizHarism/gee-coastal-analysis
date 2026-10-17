@@ -1,8 +1,11 @@
+.venv/
 venv/
 .env
+.env.*
+.env.local
 __pycache__/
 *.pyc
-.vercel
-docs/
+.vercel/
 local_server.py
+docs/
 agent.md

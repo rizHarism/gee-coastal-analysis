@@ -3,11 +3,13 @@ import json
 import os
 from urllib.parse import urlparse, parse_qs
 import ee
-from dotenv import load_dotenv
 import traceback
 import datetime
-
-load_dotenv()
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
