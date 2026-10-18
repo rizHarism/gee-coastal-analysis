@@ -218,13 +218,30 @@
                         <label class="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" id="checkRgb" checked
                                 class="w-4 h-4 rounded text-sky-500 accent-sky-500 bg-slate-800 border-slate-600">
-                            <span class="font-medium text-slate-100">Citra Satelit RGB (True Color)</span>
+                            <span class="font-medium text-slate-100">Citra Satelit RGB</span>
                         </label>
                         <span id="rgbOpacityVal" class="text-[10px] text-slate-400 font-mono">100%</span>
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="text-[10px] text-slate-500 w-12">Opacity:</span>
                         <input type="range" id="opacityRgb" min="0" max="1" step="0.05" value="1.0"
+                            class="w-full accent-sky-500 cursor-pointer">
+                    </div>
+                </div>
+
+                <!-- 1.2. Coastal Vuln -->
+                <div class="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="checkCva"
+                                class="w-4 h-4 rounded text-sky-500 accent-sky-500 bg-slate-800 border-slate-600">
+                            <span class="font-medium text-slate-100">Kerentanan Pesisir (CVA - 2026)</span>
+                        </label>
+                        <span id="cvaOpacityVal" class="text-[10px] text-slate-400 font-mono">100%</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] text-slate-500 w-12">Opacity:</span>
+                        <input type="range" id="opacityCva" min="0" max="1" step="0.05" value="0.8"
                             class="w-full accent-sky-500 cursor-pointer">
                     </div>
                 </div>
@@ -252,7 +269,7 @@
                         <label class="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" id="checkNdvi"
                                 class="w-4 h-4 rounded text-sky-500 accent-sky-500 bg-slate-800 border-slate-600">
-                            <span class="font-medium text-slate-100">Kerapatan Vegetasi (NDVI Masked)</span>
+                            <span class="font-medium text-slate-100">Kerapatan Vegetasi (NDVI)</span>
                         </label>
                         <span id="ndviOpacityVal" class="text-[10px] text-slate-400 font-mono">80%</span>
                     </div>
@@ -286,13 +303,25 @@
         <div id="legendContent" class="space-y-3.5 text-xs">
             <!-- RGB Legend -->
             <div id="legendRgbBlock">
-                <p class="text-[11px] font-semibold text-slate-300 mb-1">Citra Satelit RGB (Sentinel-2 Harmonized)</p>
-                <p class="text-[10px] text-slate-400">Komposit warna alami bebas awan median tahun pengamatan.</p>
+                <p class="text-[11px] font-semibold text-slate-300 mb-1">Citra Satelit RGB (Sentinel-2)</p>
+                <p class="text-[10px] text-slate-400">Komposit citra median sesuai tahun pengamatan.</p>
+            </div>
+
+            <!-- CVA LEGEND -->
+            <div id="legendCvaBlock" class="pt-2 border-t border-slate-800/80" style="display:none">
+                <p class="text-[11px] font-semibold text-slate-300 mb-1">Kerentanan Pesisir (CVA - 2026)</p>
+                <div class="h-2.5 rounded-full overflow-hidden flex shadow-inner mb-1"
+                    style="background: linear-gradient(to right, #362fd6,#3999d6,#21d62a,#e3ff29,#d63000);">
+                </div>
+                <div class="flex justify-between text-[10px] text-slate-400 px-0.5">
+                    <span>Sangat Rendah</span>
+                    <span class="text-orange-300 font-medium">Sangat Tinggi</span>
+                </div>
             </div>
 
             <!-- MNDWI Legend -->
-            <div id="legendMndwiBlock" class="pt-2 border-t border-slate-800/80">
-                <p class="text-[11px] font-semibold text-slate-300 mb-1">Indeks Air (MNDWI: B3 & B11)</p>
+            <div id="legendMndwiBlock" class="pt-2 border-t border-slate-800/80" style="display: none;">
+                <p class="text-[11px] font-semibold text-slate-300 mb-1">Indeks Air / Kebasahan (MNDWI)</p>
                 <div class="h-2.5 rounded-full overflow-hidden flex shadow-inner mb-1"
                     style="background: linear-gradient(to right, #ece7f2, #a6bddb, #02818a, #014636);"></div>
                 <div class="flex justify-between text-[10px] text-slate-400 px-0.5">
@@ -302,15 +331,14 @@
             </div>
 
             <!-- NDVI Legend -->
-            <div id="legendNdviBlock" class="pt-2 border-t border-slate-800/80">
-                <p class="text-[11px] font-semibold text-slate-300 mb-1">Kerapatan Vegetasi (NDVI > 0.2)</p>
+            <div id="legendNdviBlock" class="pt-2 border-t border-slate-800/80" style="display: none;">
+                <p class="text-[11px] font-semibold text-slate-300 mb-1">Kerapatan Vegetasi (NDVI)</p>
                 <div class="h-2.5 rounded-full overflow-hidden flex shadow-inner mb-1"
                     style="background: linear-gradient(to right, #d9f0a3, #78c679, #238443, #004529);"></div>
                 <div class="flex justify-between text-[10px] text-slate-400 px-0.5">
                     <span>Jarang (0.2)</span>
                     <span class="text-emerald-400 font-medium">Sangat Rapat (0.8)</span>
                 </div>
-                <p class="text-[9px] text-slate-500 mt-1">*Nilai non-vegetasi (≤ 0.2) dibuat transparan penuh.</p>
             </div>
         </div>
     </div>
@@ -360,12 +388,13 @@
 
             // Layer Imagery Cesium untuk Tahun 1 (LEFT) dan Tahun 2 (RIGHT)
             const activeLayers = {
-                year1: { rgb: null, mndwi: null, ndvi: null },
-                year2: { rgb: null, mndwi: null, ndvi: null }
+                year1: { rgb: null, cva: null, mndwi: null, ndvi: null },
+                year2: { rgb: null, cva: null, mndwi: null, ndvi: null }
             };
 
             const alphas = {
                 rgb: 1.0,
+                cva: 0.8,
                 mndwi: 0.8,
                 ndvi: 0.8
             };
@@ -481,10 +510,12 @@
 
             function updateLegendVisibility() {
                 const isRgb = document.getElementById('checkRgb').checked;
+                const isCva = document.getElementById('checkCva').checked;
                 const isMndwi = document.getElementById('checkMndwi').checked;
                 const isNdvi = document.getElementById('checkNdvi').checked;
 
                 document.getElementById('legendRgbBlock').style.display = isRgb ? 'block' : 'none';
+                document.getElementById('legendCvaBlock').style.display = isCva ? 'block' : 'none';
                 document.getElementById('legendMndwiBlock').style.display = isMndwi ? 'block' : 'none';
                 document.getElementById('legendNdviBlock').style.display = isNdvi ? 'block' : 'none';
             }
@@ -508,7 +539,7 @@
                         fetchYearData(y2)
                     ]);
 
-                    ['rgb', 'mndwi', 'ndvi'].forEach(key => {
+                    ['rgb', 'cva', 'mndwi', 'ndvi'].forEach(key => {
                         syncCesiumLayer(key, 'year1', Cesium.SplitDirection.LEFT, tilesY1);
                         syncCesiumLayer(key, 'year2', Cesium.SplitDirection.RIGHT, tilesY2);
                     });
@@ -526,7 +557,7 @@
             }
 
             // Setup Checkbox Toggles
-            ['rgb', 'mndwi', 'ndvi'].forEach(key => {
+            ['rgb', 'cva', 'mndwi', 'ndvi'].forEach(key => {
                 const check = document.getElementById('check' + key.charAt(0).toUpperCase() + key.slice(1));
                 check.addEventListener('change', () => {
                     const y1 = document.getElementById('selectYear1').value;
@@ -551,6 +582,7 @@
                 });
             }
             setupOpacity('rgb', 'opacityRgb', 'rgbOpacityVal');
+            setupOpacity('cva', 'opacityCva', 'cvaOpacityVal');
             setupOpacity('mndwi', 'opacityMndwi', 'mndwiOpacityVal');
             setupOpacity('ndvi', 'opacityNdvi', 'ndviOpacityVal');
 
@@ -559,7 +591,7 @@
                 masterOpacity = parseFloat(e.target.value);
                 document.getElementById('globalOpacityVal').innerText = `${Math.round(masterOpacity * 100)}%`;
 
-                ['rgb', 'mndwi', 'ndvi'].forEach(key => {
+                ['rgb', 'cva', 'mndwi', 'ndvi'].forEach(key => {
                     const finalAlpha = alphas[key] * masterOpacity;
                     if (activeLayers.year1[key]) activeLayers.year1[key].alpha = finalAlpha;
                     if (activeLayers.year2[key]) activeLayers.year2[key].alpha = finalAlpha;

@@ -69,7 +69,16 @@ class handler(BaseHTTPRequestHandler):
         # 4. Pemrosesan Data GEE (Pekalongan AOI)
         try:
             roi = ee.FeatureCollection('projects/original-folio-510209-p7/assets/AOI-pekalongan')
+            cva = ee.Image('projects/coastal-vulnerability/assets/CVA_Class_RF_2026')
             
+            # Menampilkan class cva dari project orang lain
+            class_cva = cva.clip(roi)
+            url_cva = class_cva.getMapId({
+                'min':1, 
+                'max':5, 
+                'palette': ['#362fd6','#3999d6','#21d62a','#e3ff29','#d63000']
+            })['tile_fetcher'].url_format
+
             # Ambil citra Sentinel-2 secara dinamis berdasarkan input tahun
             s2 = (ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
                   .filterBounds(roi)
@@ -113,6 +122,7 @@ class handler(BaseHTTPRequestHandler):
                 },
                 'tiles': {
                     'rgb': url_rgb,
+                    'cva': url_cva,
                     'mndwi': url_mndwi,
                     'ndvi': url_ndvi
                 }
